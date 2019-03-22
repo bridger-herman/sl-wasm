@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate log;
+extern crate wasm_logger;
 extern crate getopts;
 extern crate ncurses;
 extern crate nix;
@@ -119,6 +122,11 @@ fn print_usage(program: &str, opts: &Options) {
 }
 
 fn main() {
+    wasm_logger::init_with_level(log::Level::Trace)
+        .expect("Failed to initialize logger");
+
+    info!("Hello, world!");
+
     let args: Vec<String> = env::args().collect();
     let program = args[0].clone();
 
