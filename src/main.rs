@@ -1,30 +1,59 @@
 #[macro_use]
 extern crate log;
-extern crate wasm_logger;
 extern crate getopts;
-extern crate ncurses;
-extern crate nix;
+extern crate wasm_bindgen;
+extern crate wasm_logger;
+#[macro_use]
+extern crate lazy_static;
 
-mod common;
-mod logo;
 mod c51;
+mod common;
 mod d51;
+mod logo;
+
+use std::env;
+use std::sync::Mutex;
+use std::{thread, time};
 
 use getopts::Options;
-use std::env;
-use std::{thread, time};
-use ncurses::*;
-use nix::sys::signal;
-use nix::sys::signal::{sigaction, SigAction, SigHandler, SaFlags, SigSet};
-use common::*;
-use logo::Logo;
-use c51::C51;
-use d51::D51;
+use wasm_bindgen::prelude::*;
+// use ncurses::*;
+// use nix::sys::signal;
+// use nix::sys::signal::{sigaction, SigAction, SigHandler, SaFlags, SigSet};
+use crate::c51::C51;
+use crate::common::*;
+use crate::d51::D51;
+use crate::logo::Logo;
+
+pub fn LINES() -> i32 {
+    40
+}
+pub fn COLS() -> i32 {
+    80
+}
+
+// Static terminal buffer
+lazy_static! {
+    pub static ref TERM_BUF: Mutex<Vec<Vec<String>>> =
+        Mutex::new(vec![
+            vec![' '.to_string(); COLS() as usize];
+            LINES() as usize
+        ]);
+}
+
+macro_rules! scr_buf {
+    () => {
+        TERM_BUF.try_lock().unwrap()
+    };
+    ( $y:expr, $x:expr, $c:expr ) => {
+        TERM_BUF.try_lock().unwrap()[$y][$x] = $c;
+    };
+}
 
 pub enum SLType {
     Logo,
     C51,
-    D51
+    D51,
 }
 
 pub fn my_mvaddstr(y: i32, mut x: i32, str: &str) -> bool {
@@ -34,57 +63,67 @@ pub fn my_mvaddstr(y: i32, mut x: i32, str: &str) -> bool {
         x += 1;
     }
     for c in chars {
-        if mvaddch(y, x, c as chtype) == ERR { return false }
+        scr_buf!(y as usize, x as usize, c.to_string());
+
         x += 1;
     }
 
     true
 }
 
+#[wasm_bindgen]
+pub fn display_one_sl() -> String {
+    // String::from("Hello from SL land")
+    (*scr_buf!())
+        .iter()
+        .map(|l| l.join(""))
+        .collect::<Vec<String>>()
+        .join("\n")
+}
+
 pub struct Config {
     pub accident: bool,
     pub fly: bool,
     pub smoke: bool,
-    pub smoke_state: smoke::SmokeState
+    pub smoke_state: smoke::SmokeState,
 }
 
 pub trait Train {
     fn update(&mut self, x: i32) -> bool;
     fn get_smoke_state(&mut self) -> &mut smoke::SmokeState;
 
-    fn run(&mut self) {
-        initscr();
+    // fn run(&mut self) {
+    // initscr();
 
-        let action = SigAction::new(SigHandler::SigIgn, SaFlags::empty(), SigSet::empty());
-        unsafe { sigaction(signal::SIGINT, &action) }.unwrap();
+    // // let action = SigAction::new(SigHandler::SigIgn, SaFlags::empty(), SigSet::empty());
+    // // unsafe { sigaction(signal::SIGINT, &action) }.unwrap();
 
-        noecho();
-        curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
-        nodelay(stdscr(), true);
-        leaveok(stdscr(), true);
-        scrollok(stdscr(), false);
+    // // noecho();
+    // // curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
+    // // nodelay(stdscr(), true);
+    // // leaveok(stdscr(), true);
+    // // scrollok(stdscr(), false);
 
-        let mut x = COLS() - 1;
-        loop {
-            if !self.update(x) {
-                break;
-            }
+    // let mut x = COLS() - 1;
+    // loop {
+    // if !self.update(x) {
+    // break;
+    // }
 
-            getch();
-            refresh();
-            thread::sleep(time::Duration::from_millis(40));
-            x -= 1;
-        }
+    // // getch();
+    // // refresh();
+    // thread::sleep(time::Duration::from_millis(40));
+    // x -= 1;
+    // }
 
-        mvcur(0, COLS() - 1, LINES() - 1, 0);
-        endwin();
-    }
-
+    // mvcur(0, COLS() - 1, LINES() - 1, 0);
+    // endwin();
+    // }
 
     fn add_man(&self, y: i32, x: i32) {
         for i in 0..2 {
             let man_x = ((SL_LENGTH + x) / 12 % 2) as usize;
-            my_mvaddstr(y + i, x, MAN[man_x][i as usize]);
+            // my_mvaddstr(y + i, x, MAN[man_x][i as usize]);
         }
     }
 
@@ -97,17 +136,19 @@ pub trait Train {
         if x % 4 == 0 {
             for i in 0..sum {
                 let pattern = s[i].ptrn as usize;
-                my_mvaddstr(s[i].y, s[i].x, ERASER[pattern]);
+                // my_mvaddstr(s[i].y, s[i].x, ERASER[pattern]);
                 s[i].y -= DY[pattern];
                 s[i].x += DX[pattern];
                 let pattern = if pattern < SMOKEPTNS - 1 {
                     s[i].ptrn += 1;
                     s[i].ptrn as usize
-                } else { pattern };
+                } else {
+                    pattern
+                };
 
-                my_mvaddstr(s[i].y, s[i].x, SMOKE[(s[i].kind) as usize][pattern]);
+                // my_mvaddstr(s[i].y, s[i].x, SMOKE[(s[i].kind) as usize][pattern]);
             }
-            my_mvaddstr(y, x, SMOKE[sum % 2][0]);
+            // my_mvaddstr(y, x, SMOKE[sum % 2][0]);
             s[sum].y = y;
             s[sum].x = x;
             s[sum].ptrn = 0;
@@ -121,7 +162,8 @@ fn print_usage(program: &str, opts: &Options) {
     println!("{}", opts.usage(&format!("Usage:\n {} [options]", program)));
 }
 
-fn main() {
+#[wasm_bindgen(start)]
+pub fn wasm_init() {
     wasm_logger::init_with_level(log::Level::Trace)
         .expect("Failed to initialize logger");
 
@@ -138,7 +180,7 @@ fn main() {
     opts.optflag("s", "no-smoke", "disable smoke mode");
     opts.optflag("", "help", "show this usage message.");
     let matches = match opts.parse(&args[1..]) {
-        Ok(m) => { m }
+        Ok(m) => m,
         Err(_) => {
             print_usage(&program, &opts);
             return;
@@ -148,24 +190,25 @@ fn main() {
         print_usage(&program, &opts);
         return;
     }
-    let sl_type =
-        if matches.opt_present("logo") {
-            SLType::Logo
-        } else if matches.opt_present("c51") {
-            SLType::C51
-        } else {
-            SLType::D51
-        };
+    let sl_type = if matches.opt_present("logo") {
+        SLType::Logo
+    } else if matches.opt_present("c51") {
+        SLType::C51
+    } else {
+        SLType::D51
+    };
 
     let conf = Config {
         accident: matches.opt_present("accident"),
         fly: matches.opt_present("fly"),
         smoke: !matches.opt_present("no-smoke"),
-        smoke_state: smoke::SmokeState::new()
+        smoke_state: smoke::SmokeState::new(),
     };
-    match sl_type {
-        SLType::Logo => Logo::new(conf).run(),
-        SLType::C51 => C51::new(conf).run(),
-        SLType::D51 => D51::new(conf).run()
-    };
+    // match sl_type {
+    // SLType::Logo => Logo::new(conf).run(),
+    // SLType::C51 => C51::new(conf).run(),
+    // SLType::D51 => D51::new(conf).run()
+    // };
 }
+
+fn main() {}
