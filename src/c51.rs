@@ -1,4 +1,4 @@
-use super::{Config, Train, COLS, LINES};
+use super::{Config, Train, my_mvaddstr, num_cols, num_lines};
 use crate::common::*;
 
 const C51HEIGHT: i32 = 11;
@@ -116,18 +116,18 @@ impl Train for C51 {
         let dy;
 
         if self.conf.fly {
-            y = (x / 7) + LINES() - (COLS() / 7) - C51HEIGHT;
+            y = (x / 7) + num_lines() - (num_cols() / 7) - C51HEIGHT;
             dy = 1;
         } else {
-            y = LINES() / 2 - 5;
+            y = num_lines() / 2 - 5;
             dy = 0;
         }
 
         for i in 0..C51HEIGHT + 1 {
             let idx = i as usize;
             let sl_y = ((C51LENGTH + x) % C51PATTERNS) as usize;
-            // my_mvaddstr(y + i, x, SL[sl_y][idx]);
-            // my_mvaddstr(y + i + dy, x + 55, COAL[idx]);
+            my_mvaddstr(y + i, x, SL[sl_y][idx]);
+            my_mvaddstr(y + i + dy, x + 55, COAL[idx]);
         }
         if self.conf.accident {
             self.add_man(y + 3, x + 45);

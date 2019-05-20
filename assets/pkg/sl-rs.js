@@ -2,6 +2,22 @@
 const __exports = {};
 let wasm;
 
+/**
+* @returns {number}
+*/
+export function num_lines() {
+    return wasm.num_lines();
+}
+__exports.num_lines = num_lines
+
+/**
+* @returns {number}
+*/
+export function num_cols() {
+    return wasm.num_cols();
+}
+__exports.num_cols = num_cols
+
 let cachedTextDecoder = new TextDecoder('utf-8');
 
 let cachegetUint8Memory = null;
@@ -32,11 +48,12 @@ function getUint32Memory() {
     return cachegetUint32Memory;
 }
 /**
+* @param {number} x
 * @returns {string}
 */
-export function display_one_sl() {
+export function display_one_sl(x) {
     const retptr = globalArgumentPtr();
-    wasm.display_one_sl(retptr);
+    wasm.display_one_sl(retptr, x);
     const mem = getUint32Memory();
     const rustptr = mem[retptr / 4];
     const rustlen = mem[retptr / 4 + 1];

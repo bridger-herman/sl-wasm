@@ -1,4 +1,4 @@
-use super::{Config, Train, COLS, LINES};
+use super::{Config, Train, my_mvaddstr, num_cols, num_lines};
 use crate::common::*;
 
 const LOGOHEIGHT: i32 = 6;
@@ -81,24 +81,31 @@ impl Train for Logo {
         let py3;
 
         if self.conf.fly {
-            y = (x / 6) + LINES() - (COLS() / 6) - LOGOHEIGHT;
+            y = (x / 6) + num_lines() - (num_cols() / 6) - LOGOHEIGHT;
             py1 = 2;
             py2 = 4;
             py3 = 6;
         } else {
-            y = LINES() / 2 - 3;
+            y = num_lines() / 2 - 3;
             py1 = 0;
             py2 = 0;
             py3 = 0;
         }
 
         for i in 0..LOGOHEIGHT + 1 {
+            debug!("Logo {}", i);
             let idx = i as usize;
+            debug!("before div");
             let sl_y = ((LOGOLENGTH + x) / 3 % LOGOPATTERNS) as usize;
-            // my_mvaddstr(y + i, x, SL[sl_y][idx]);
-            // my_mvaddstr(y + i + py1, x + 21, COAL[idx]);
-            // my_mvaddstr(y + i + py2, x + 42, CAR[idx]);
-            // my_mvaddstr(y + i + py3, x + 63, CAR[idx]);
+            debug!("after div");
+            my_mvaddstr(y + i, x, SL[sl_y][idx]);
+            debug!("after div 1");
+            my_mvaddstr(y + i + py1, x + 21, COAL[idx]);
+            debug!("after div 2");
+            my_mvaddstr(y + i + py2, x + 42, CAR[idx]);
+            debug!("after div 3");
+            my_mvaddstr(y + i + py3, x + 63, CAR[idx]);
+            debug!("Logo {} end", i);
         }
         if self.conf.accident {
             self.add_man(y + 1, x + 14);
