@@ -1,5 +1,6 @@
-use super::{Config, Train, my_mvaddstr, num_cols, num_lines};
 use crate::common::*;
+use crate::term_buf::{num_cols, num_lines, place_string};
+use crate::train::{Config, Train};
 
 const D51HEIGHT: i32 = 10;
 const D51FUNNEL: i32 = 7;
@@ -106,21 +107,19 @@ impl Train for D51 {
             return false;
         }
         let y;
-        let dy;
-
-        if self.conf.fly {
+        let dy = if self.conf.fly {
             y = (x / 7) + num_lines() - (num_cols() / 7) - D51HEIGHT;
-            dy = 1;
+            1
         } else {
             y = num_lines() / 2 - 5;
-            dy = 0;
-        }
+            0
+        };
 
-        for i in 0..D51HEIGHT + 1 {
+        for i in 0..=D51HEIGHT {
             let idx = i as usize;
             let sl_y = ((D51LENGTH + x) % D51PATTERNS) as usize;
-            my_mvaddstr(y + i, x, SL[sl_y][idx]);
-            my_mvaddstr(y + i + dy, x + 53, COAL[idx]);
+            place_string(y + i, x, SL[sl_y][idx]);
+            place_string(y + i + dy, x + 53, COAL[idx]);
         }
         if self.conf.accident {
             self.add_man(y + 2, x + 43);

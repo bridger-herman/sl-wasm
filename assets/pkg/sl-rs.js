@@ -5,18 +5,18 @@ let wasm;
 /**
 * @returns {number}
 */
-export function num_lines() {
-    return wasm.num_lines();
-}
-__exports.num_lines = num_lines
-
-/**
-* @returns {number}
-*/
 export function num_cols() {
     return wasm.num_cols();
 }
 __exports.num_cols = num_cols
+
+/**
+* @returns {number}
+*/
+export function num_lines() {
+    return wasm.num_lines();
+}
+__exports.num_lines = num_lines
 
 let cachedTextDecoder = new TextDecoder('utf-8');
 

@@ -1,5 +1,6 @@
-use super::{Config, Train, my_mvaddstr, num_cols, num_lines};
 use crate::common::*;
+use crate::term_buf::{num_cols, num_lines, place_string};
+use crate::train::{Config, Train};
 
 const LOGOHEIGHT: i32 = 6;
 const LOGOFUNNEL: i32 = 4;
@@ -76,36 +77,21 @@ impl Train for Logo {
             return false;
         }
         let y;
-        let py1;
-        let py2;
-        let py3;
-
-        if self.conf.fly {
+        let (py1, py2, py3) = if self.conf.fly {
             y = (x / 6) + num_lines() - (num_cols() / 6) - LOGOHEIGHT;
-            py1 = 2;
-            py2 = 4;
-            py3 = 6;
+            (2, 4, 6)
         } else {
             y = num_lines() / 2 - 3;
-            py1 = 0;
-            py2 = 0;
-            py3 = 0;
-        }
+            (0, 0, 0)
+        };
 
-        for i in 0..LOGOHEIGHT + 1 {
-            debug!("Logo {}", i);
+        for i in 0..=LOGOHEIGHT {
             let idx = i as usize;
-            debug!("before div");
             let sl_y = ((LOGOLENGTH + x) / 3 % LOGOPATTERNS) as usize;
-            debug!("after div");
-            my_mvaddstr(y + i, x, SL[sl_y][idx]);
-            debug!("after div 1");
-            my_mvaddstr(y + i + py1, x + 21, COAL[idx]);
-            debug!("after div 2");
-            my_mvaddstr(y + i + py2, x + 42, CAR[idx]);
-            debug!("after div 3");
-            my_mvaddstr(y + i + py3, x + 63, CAR[idx]);
-            debug!("Logo {} end", i);
+            place_string(y + i, x, SL[sl_y][idx]);
+            place_string(y + i + py1, x + 21, COAL[idx]);
+            place_string(y + i + py2, x + 42, CAR[idx]);
+            place_string(y + i + py3, x + 63, CAR[idx]);
         }
         if self.conf.accident {
             self.add_man(y + 1, x + 14);

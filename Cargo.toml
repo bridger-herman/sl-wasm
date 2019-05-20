@@ -17,10 +17,7 @@ exclude = [
 edition = "2018"
 
 [dependencies]
-getopts = "^0"
 wasm-bindgen = "0.2.39"
-base64 = "0.10"
-png = "0.14"
 wasm-logger = {git = "https://github.com/bridger-herman/wasm-logger.git"}
 log = "0.4"
 lazy_static = "1.3"
