@@ -21,6 +21,7 @@ lazy_static! {
         ]);
 }
 
+#[macro_export]
 macro_rules! scr_buf {
     () => {
         *crate::term_buf::TERM_BUF.try_lock().unwrap()

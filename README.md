@@ -1,5 +1,7 @@
 # sl-rs
 
+Original repository for `sl-rs`: <https://bitbucket.org/yshryk/sl-rs/src/default/>
+
 Pure Rust port of the SL, an old joke command.
 
 SL (Steam Locomotive) runs across your terminal when you type "sl" as you meant to type "ls".
